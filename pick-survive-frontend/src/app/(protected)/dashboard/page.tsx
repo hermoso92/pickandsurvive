@@ -219,7 +219,7 @@ export default function DashboardPage() {
             // Calcular jornada actual del participante
             let currentMatchday = editionDetail.startMatchday;
             if (myParticipant.picks.length > 0) {
-              const lastPickMatchday = Math.max(...myParticipant.picks.map(p => p.matchday));
+              const lastPickMatchday = Math.max(...myParticipant.picks.map(p => p.match.matchday));
               currentMatchday = lastPickMatchday + 1;
             }
             
