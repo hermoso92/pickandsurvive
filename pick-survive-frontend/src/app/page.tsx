@@ -13,7 +13,7 @@ export default function SignupPage() {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError('');
     setSuccessMessage('');
@@ -42,8 +42,8 @@ export default function SignupPage() {
       setAlias('');
       setPassword('');
 
-    } catch (err) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error al registrarse');
     }
   };
 

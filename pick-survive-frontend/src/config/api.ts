@@ -17,6 +17,7 @@ export const API_ENDPOINTS = {
     STATS: (id: string) => `${API_BASE_URL}/editions/${id}/stats`,
     PROCESS: (id: string) => `${API_BASE_URL}/editions/${id}/process`,
     ADVANCE_MATCHDAY: (id: string) => `${API_BASE_URL}/editions/${id}/advance-matchday`,
+    CLOSE: (id: string) => `${API_BASE_URL}/editions/${id}/close`,
   },
   LEAGUES: {
     CREATE: `${API_BASE_URL}/leagues`,
@@ -70,15 +71,6 @@ export const API_ENDPOINTS = {
     EDITION: (editionId: string) => `${API_BASE_URL}/rankings/edition/${editionId}`,
     ME: `${API_BASE_URL}/rankings/me`,
     HISTORY: `${API_BASE_URL}/rankings/history`,
-  },
-  EDITIONS: {
-    LIST: `${API_BASE_URL}/editions`,
-    DETAIL: (id: string) => `${API_BASE_URL}/editions/${id}`,
-    JOIN: (id: string) => `${API_BASE_URL}/editions/${id}/join`,
-    STATS: (id: string) => `${API_BASE_URL}/editions/${id}/stats`,
-    PROCESS: (id: string) => `${API_BASE_URL}/editions/${id}/process`,
-    ADVANCE_MATCHDAY: (id: string) => `${API_BASE_URL}/editions/${id}/advance-matchday`,
-    CLOSE: (id: string) => `${API_BASE_URL}/editions/${id}/close`,
   },
   COINS: {
     ME: `${API_BASE_URL}/coins/me`,

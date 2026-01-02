@@ -15,7 +15,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError('');
 
@@ -36,8 +36,8 @@ export default function LoginPage() {
       await login(data.access_token);
       router.push('/dashboard'); // Redirige al dashboard
 
-    } catch (err) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error al iniciar sesión');
     }
   };
 
