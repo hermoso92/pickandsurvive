@@ -64,7 +64,7 @@ export default function LeagueSettingsPage() {
       sudden_death: false,
       pick_deadline: 'FIRST_KICKOFF',
     },
-    modes_enabled: ['ELIMINATORIO', 'LIGA'],
+    modes_enabled: ['ELIMINATORIO', 'LIGA'] as ('ELIMINATORIO' | 'LIGA')[],
   });
 
   useEffect(() => {
@@ -334,9 +334,9 @@ export default function LeagueSettingsPage() {
                   type="checkbox"
                   checked={formData.modes_enabled.includes('ELIMINATORIO')}
                   onChange={(e) => {
-                    const newModes = e.target.checked
+                    const newModes = (e.target.checked
                       ? [...formData.modes_enabled, 'ELIMINATORIO']
-                      : formData.modes_enabled.filter(m => m !== 'ELIMINATORIO');
+                      : formData.modes_enabled.filter(m => m !== 'ELIMINATORIO')) as ('ELIMINATORIO' | 'LIGA')[];
                     if (newModes.length > 0) {
                       setFormData({ ...formData, modes_enabled: newModes });
                     }
@@ -351,9 +351,9 @@ export default function LeagueSettingsPage() {
                   type="checkbox"
                   checked={formData.modes_enabled.includes('LIGA')}
                   onChange={(e) => {
-                    const newModes = e.target.checked
+                    const newModes = (e.target.checked
                       ? [...formData.modes_enabled, 'LIGA']
-                      : formData.modes_enabled.filter(m => m !== 'LIGA');
+                      : formData.modes_enabled.filter(m => m !== 'LIGA')) as ('ELIMINATORIO' | 'LIGA')[];
                     if (newModes.length > 0) {
                       setFormData({ ...formData, modes_enabled: newModes });
                     }

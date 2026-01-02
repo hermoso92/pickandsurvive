@@ -4,7 +4,7 @@ import { persist } from 'zustand/middleware';
 // Definimos la "forma" que tendrán los datos en nuestro cerebro
 interface AuthState {
   token: string | null;
-  user: { id: string; email: string; alias: string | null; balanceCents?: number } | null;
+  user: { id: string; email: string; alias: string | null; balanceCents?: number; createdAt?: string } | null;
   isAuthenticated: boolean;
   login: (token: string, userData?: any) => void;
   logout: () => void;

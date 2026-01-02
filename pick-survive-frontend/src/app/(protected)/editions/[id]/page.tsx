@@ -543,7 +543,7 @@ export default function EditionDetailPage() {
     
     if (!match) return null;
     
-    if (match.status !== 'FINISHED' || match.homeGoals === null || match.awayGoals === null) {
+    if (match.status !== 'FINISHED' || match.homeGoals === null || match.homeGoals === undefined || match.awayGoals === null || match.awayGoals === undefined) {
       return null; // Partido sin resultado
     }
     
@@ -760,14 +760,36 @@ export default function EditionDetailPage() {
                   .sort((a, b) => b.matchday - a.matchday) // Más recientes primero
                   .map(pick => {
                     // Intentar obtener el match del pick o de los partidos cargados
-                    let match = pick.match;
+                    let match: Pick['match'] | Match | undefined = pick.match;
                     if (!match) {
-                      match = previousMatches[pick.matchday]?.find(m => m.id === pick.matchId);
+                      const foundMatch = previousMatches[pick.matchday]?.find(m => m.id === pick.matchId);
+                      if (foundMatch) {
+                        match = {
+                          id: foundMatch.id,
+                          matchday: foundMatch.matchday ?? pick.matchday,
+                          homeGoals: foundMatch.homeGoals,
+                          awayGoals: foundMatch.awayGoals,
+                          status: foundMatch.status,
+                          homeTeam: foundMatch.homeTeam,
+                          awayTeam: foundMatch.awayTeam,
+                        };
+                      }
                     }
                     if (!match) {
-                      match = previousMatches[pick.matchday]?.find(m => 
+                      const foundMatch = previousMatches[pick.matchday]?.find(m => 
                         m.homeTeam.id === pick.team.id || m.awayTeam.id === pick.team.id
                       );
+                      if (foundMatch) {
+                        match = {
+                          id: foundMatch.id,
+                          matchday: foundMatch.matchday ?? pick.matchday,
+                          homeGoals: foundMatch.homeGoals,
+                          awayGoals: foundMatch.awayGoals,
+                          status: foundMatch.status,
+                          homeTeam: foundMatch.homeTeam,
+                          awayTeam: foundMatch.awayTeam,
+                        };
+                      }
                     }
                     const result = isPickCorrect(pick, pick.matchday);
                     const hasResult = match && match.status === 'FINISHED' && 

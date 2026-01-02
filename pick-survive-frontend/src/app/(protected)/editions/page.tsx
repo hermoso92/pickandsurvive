@@ -82,7 +82,7 @@ export default function EditionsPage() {
                   <p className="text-green-100">Puedes unirte a ediciones con este saldo</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-bold">{(user.balanceCents / 100).toFixed(2)}€</p>
+                  <p className="text-3xl font-bold">{((user.balanceCents ?? 0) / 100).toFixed(2)}€</p>
                 </div>
               </div>
             </div>

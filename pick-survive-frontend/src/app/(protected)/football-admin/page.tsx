@@ -299,7 +299,7 @@ export default function FootballDataAdmin() {
                         <div>
                           <p className="text-xs text-gray-600">Equipos Omitidos</p>
                           <p className="text-lg font-bold text-yellow-800">{result.teamsSkipped || 0}</p>
-                          {result.teamsSkipped > 0 && (
+                          {(result.teamsSkipped ?? 0) > 0 && (
                             <p className="text-xs text-yellow-600">(campos faltantes o errores)</p>
                           )}
                         </div>
