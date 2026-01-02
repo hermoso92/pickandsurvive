@@ -1,0 +1,366 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String         @id @default(cuid())
+  email             String         @unique
+  alias             String?
+  createdAt         DateTime       @default(now())
+  password          String
+  ownedLeagues      League[]       @relation("LeagueOwner")
+  sentInvites       LeagueInvite[] @relation("InviteSender")
+  leagueMemberships LeagueMember[]
+  ledgerEntries     Ledger[]
+  participants      Participant[]
+  userPoints        UserPoints?
+  userCoins         UserCoins?
+  userProfile       UserProfile?
+  purchases         UserPurchase[]
+  notifications     Notification[]
+  userSettings      UserSettings?
+  activityLogs      ActivityLog[]
+}
+
+model League {
+  id                String         @id @default(cuid())
+  name              String
+  ownerUserId       String
+  defaultConfigJson Json           @default("{}")
+  visibility        String         @default("PRIVATE")
+  inviteCode        String?        @unique // Código de invitación compartible
+  createdAt         DateTime       @default(now())
+  editions          Edition[]
+  owner             User           @relation("LeagueOwner", fields: [ownerUserId], references: [id])
+  invites           LeagueInvite[]
+  members           LeagueMember[]
+  ledgerEntries     Ledger[]
+}
+
+model LeagueMember {
+  leagueId String
+  userId   String
+  role     String   @default("PLAYER")
+  joinedAt DateTime @default(now())
+  league   League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([leagueId, userId])
+}
+
+model LeagueInvite {
+  id        String   @id @default(cuid())
+  leagueId  String
+  email     String
+  status    String   @default("PENDING")
+  invitedBy String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  inviter   User     @relation("InviteSender", fields: [invitedBy], references: [id])
+  league    League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+
+  @@unique([leagueId, email])
+}
+
+model Edition {
+  id                String             @id @default(cuid())
+  name              String
+  status            String             @default("OPEN")
+  startMatchday     Int
+  entryFeeCents     Int                @default(500)
+  potCents          Int                @default(0)
+  configJson        Json               @default("{}")
+  createdAt         DateTime           @default(now())
+  endMatchday       Int?
+  leagueId          String
+  mode              String             @default("ELIMINATORIO")
+  locksAt           DateTime?
+  seasonId          String?
+  league            League             @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  season            Season?            @relation(fields: [seasonId], references: [id])
+  ledgerEntries     Ledger[]
+  participants      Participant[]
+  pointTransactions PointTransaction[]
+  coinTransactions  CoinTransaction[]
+
+  @@index([leagueId])
+  @@index([status])
+  @@index([seasonId])
+}
+
+model Participant {
+  id        String  @id @default(cuid())
+  status    String  @default("ACTIVE")
+  userId    String
+  editionId String
+  edition   Edition @relation(fields: [editionId], references: [id])
+  user      User    @relation(fields: [userId], references: [id])
+  picks     Pick[]
+
+  @@unique([userId, editionId])
+}
+
+model Ledger {
+  id          String   @id @default(cuid())
+  amountCents Int
+  type        String
+  createdAt   DateTime @default(now())
+  userId      String?
+  editionId   String?
+  leagueId    String?
+  metaJson    Json     @default("{}")
+  edition     Edition? @relation(fields: [editionId], references: [id])
+  league      League?  @relation(fields: [leagueId], references: [id])
+  user        User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([editionId])
+  @@index([leagueId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model Team {
+  id           String    @id @default(cuid())
+  name         String    @unique
+  shortName    String
+  createdAt    DateTime  @default(now())
+  crest        String?
+  externalId   Int?      @unique
+  lastSyncedAt DateTime?
+  updatedAt    DateTime  @default(now())
+  awayMatches  Match[]   @relation("AwayTeam")
+  homeMatches  Match[]   @relation("HomeTeam")
+  picks        Pick[]
+}
+
+model Match {
+  id           String    @id @default(cuid())
+  matchday     Int
+  kickoffAt    DateTime
+  status       String    @default("SCHEDULED")
+  homeGoals    Int?
+  awayGoals    Int?
+  homeTeamId   String
+  awayTeamId   String
+  competition  String?
+  createdAt    DateTime  @default(now())
+  externalId   Int?      @unique
+  lastSyncedAt DateTime?
+  season       Int?
+  updatedAt    DateTime  @default(now())
+  awayTeam     Team      @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  homeTeam     Team      @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  picks        Pick[]
+
+  @@index([matchday])
+  @@index([status])
+}
+
+model Pick {
+  id            String      @id @default(cuid())
+  matchday      Int
+  participantId String
+  teamId        String
+  matchId       String
+  match         Match       @relation(fields: [matchId], references: [id])
+  participant   Participant @relation(fields: [participantId], references: [id])
+  team          Team        @relation(fields: [teamId], references: [id])
+
+  @@index([participantId])
+}
+
+model UserPoints {
+  id           String             @id @default(cuid())
+  userId       String             @unique
+  totalPoints  Int                @default(0)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions PointTransaction[]
+  achievements UserAchievement[]
+
+  @@index([userId])
+  @@index([totalPoints])
+}
+
+model PointTransaction {
+  id         String     @id @default(cuid())
+  userId     String
+  points     Int // Positivo = ganado, Negativo = gastado
+  type       String // MATCHDAY_WIN, SHOP_PURCHASE, ACHIEVEMENT_UNLOCK, BONUS
+  editionId  String?
+  matchday   Int?
+  metaJson   Json       @default("{}")
+  createdAt  DateTime   @default(now())
+  userPoints UserPoints @relation(fields: [userId], references: [userId])
+  edition    Edition?   @relation(fields: [editionId], references: [id])
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+  @@index([editionId])
+}
+
+model UserCoins {
+  id           String            @id @default(cuid())
+  userId       String            @unique
+  totalCoins   Int               @default(0)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions CoinTransaction[]
+
+  @@index([userId])
+  @@index([totalCoins])
+}
+
+model CoinTransaction {
+  id        String    @id @default(cuid())
+  userId    String
+  coins     Int // Positivo = ganado, Negativo = gastado
+  type      String // MATCHDAY_WIN, SHOP_PURCHASE, BONUS
+  editionId String?
+  matchday  Int?
+  metaJson  Json      @default("{}")
+  createdAt DateTime  @default(now())
+  userCoins UserCoins @relation(fields: [userId], references: [userId])
+  edition   Edition?  @relation(fields: [editionId], references: [id])
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+  @@index([editionId])
+}
+
+model Achievement {
+  id               String            @id @default(cuid())
+  code             String            @unique // FIRST_WIN, PERFECT_WEEK, STREAK_5, etc.
+  name             String
+  description      String
+  icon             String? // Emoji o URL
+  pointsReward     Int               @default(0)
+  category         String // WINNING, STREAK, PARTICIPATION, SPECIAL
+  rarity           String // COMMON, RARE, EPIC, LEGENDARY
+  createdAt        DateTime          @default(now())
+  userAchievements UserAchievement[]
+
+  @@index([category])
+  @@index([rarity])
+}
+
+model UserAchievement {
+  id            String      @id @default(cuid())
+  userId        String
+  achievementId String
+  unlockedAt    DateTime    @default(now())
+  userPoints    UserPoints  @relation(fields: [userId], references: [userId])
+  achievement   Achievement @relation(fields: [achievementId], references: [id])
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+  @@index([unlockedAt])
+}
+
+model ShopItem {
+  id          String         @id @default(cuid())
+  code        String         @unique // LOGO_1, LOGO_2, etc.
+  name        String
+  description String
+  type        String // LOGO, AVATAR, BADGE
+  pricePoints Int // Precio en puntos
+  imageUrl    String? // URL del logo/imagen
+  isActive    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  purchases   UserPurchase[]
+
+  @@index([type])
+  @@index([isActive])
+}
+
+model UserPurchase {
+  id          String   @id @default(cuid())
+  userId      String
+  shopItemId  String
+  purchasedAt DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shopItem    ShopItem @relation(fields: [shopItemId], references: [id])
+
+  @@unique([userId, shopItemId])
+  @@index([userId])
+}
+
+model UserProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  selectedLogo String? // ID del logo seleccionado
+  bio          String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String // ACHIEVEMENT, POINTS, RESULT, INVITATION, RANKING
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  metaJson  Json     @default("{}")
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
+}
+
+model UserSettings {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  emailNotifications Boolean  @default(true)
+  pushNotifications  Boolean  @default(true)
+  theme              String   @default("light") // light, dark, auto
+  language           String   @default("es")
+  timezone           String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  type        String // PICK_CREATED, EDITION_JOINED, ACHIEVEMENT_UNLOCKED, etc.
+  description String
+  metaJson    Json     @default("{}")
+  createdAt   DateTime @default(now())
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model Season {
+  id        String    @id @default(cuid())
+  name      String // "Temporada 2025"
+  startDate DateTime
+  endDate   DateTime?
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  editions  Edition[]
+
+  @@index([isActive])
+}
