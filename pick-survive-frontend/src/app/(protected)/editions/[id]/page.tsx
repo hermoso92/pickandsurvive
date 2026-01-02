@@ -505,18 +505,40 @@ export default function EditionDetailPage() {
   // Función para calcular si un pick fue correcto
   const isPickCorrect = (pick: Pick, matchday: number): boolean | null => {
     // Primero intentar usar el match del pick si está disponible
-    let match = pick.match;
+    let match: Pick['match'] | Match | undefined = pick.match;
     
     // Si no está disponible, buscar en los partidos cargados
     if (!match) {
-      match = previousMatches[matchday]?.find(m => m.id === pick.matchId);
+      const foundMatch = previousMatches[matchday]?.find(m => m.id === pick.matchId);
+      if (foundMatch) {
+        match = {
+          id: foundMatch.id,
+          matchday: foundMatch.matchday ?? matchday,
+          homeGoals: foundMatch.homeGoals,
+          awayGoals: foundMatch.awayGoals,
+          status: foundMatch.status,
+          homeTeam: foundMatch.homeTeam,
+          awayTeam: foundMatch.awayTeam,
+        };
+      }
     }
     
     // Si aún no lo encontramos, buscar por equipo
     if (!match) {
-      match = previousMatches[matchday]?.find(m => 
+      const foundMatch = previousMatches[matchday]?.find(m => 
         m.homeTeam.id === pick.team.id || m.awayTeam.id === pick.team.id
       );
+      if (foundMatch) {
+        match = {
+          id: foundMatch.id,
+          matchday: foundMatch.matchday ?? matchday,
+          homeGoals: foundMatch.homeGoals,
+          awayGoals: foundMatch.awayGoals,
+          status: foundMatch.status,
+          homeTeam: foundMatch.homeTeam,
+          awayTeam: foundMatch.awayTeam,
+        };
+      }
     }
     
     if (!match) return null;
@@ -530,8 +552,8 @@ export default function EditionDetailPage() {
     
     // Determinar equipo ganador
     const winningTeamId = match.homeGoals > match.awayGoals 
-      ? match.homeTeam.id 
-      : match.awayTeam.id;
+      ? match.homeTeam!.id 
+      : match.awayTeam!.id;
     
     return pick.team.id === winningTeamId;
   };
