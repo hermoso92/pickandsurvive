@@ -19,12 +19,28 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user } = useAuth();
 
-  // Navegación administrativa (solo visible en sidebar para móvil o usuarios admin)
+  // Navegación principal (igual que desktop)
+  const mainNavigation = [
+    { name: 'Dashboard', href: '/dashboard', icon: '🏠' },
+    { name: 'Mi Liga', href: '/leagues', icon: '🏆' },
+    { name: 'Ediciones', href: '/editions', icon: '📅' },
+    { name: 'Clasificación', href: '/rankings', icon: '📊' },
+    { name: 'Logros', href: '/achievements', icon: '🎖️' },
+    { name: 'Tienda', href: '/shop', icon: '🛒' },
+    { name: 'Estadísticas', href: '/statistics', icon: '📈' },
+  ];
+
+  // Navegación administrativa (solo para usuarios admin)
   const adminNavigation = [
     { name: 'Administración', href: '/admin', icon: '⚙️' },
     { name: 'Datos de Fútbol', href: '/football-admin', icon: '⚽' },
     { name: 'Modo Test', href: '/test', icon: '🧪' },
   ];
+
+  // Verificar si el usuario es admin (verificar tanto role como email para compatibilidad)
+  const isAdmin = user?.role === 'ADMIN' || 
+                  user?.role === 'MASTER' || 
+                  user?.email === 'master@pickandsurvive.com';
 
   return (
     <>
@@ -36,13 +52,13 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
         />
       )}
       
-      {/* Sidebar - Solo para móvil o navegación administrativa */}
+      {/* Sidebar - Solo para móvil */}
       <div className={`
         fixed inset-y-0 left-0 z-50 w-72 bg-gradient-to-b from-slate-900 via-blue-900 to-purple-900 transform transition-all duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:hidden
       `}>
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full overflow-y-auto">
           {/* Header del sidebar */}
           <div className="flex items-center justify-between p-6 border-b border-white/10">
             <div className="flex items-center space-x-3">
@@ -64,11 +80,13 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
             </button>
           </div>
 
-          {/* Navegación administrativa */}
+          {/* Navegación principal */}
           <nav className="flex-1 p-6">
             <ul className="space-y-2">
-              {adminNavigation.map((item) => {
-                const isActive = pathname === item.href;
+              {mainNavigation.map((item) => {
+                const isActive = pathname === item.href || 
+                  (item.href === '/leagues' && pathname?.startsWith('/leagues')) ||
+                  (item.href === '/editions' && pathname?.startsWith('/editions'));
                 return (
                   <li key={item.name}>
                     <Link
@@ -77,7 +95,7 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
                       className={`
                         flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 group
                         ${isActive 
-                          ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/25' 
+                          ? 'bg-gradient-to-r from-green-500 via-emerald-500 to-green-600 text-white shadow-lg shadow-green-500/25' 
                           : 'text-gray-300 hover:bg-white/10 hover:text-white'
                         }
                       `}
@@ -92,6 +110,42 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
                 );
               })}
             </ul>
+
+            {/* Separador para navegación administrativa */}
+            {isAdmin && (
+              <>
+                <div className="my-4 border-t border-white/10"></div>
+                <div className="px-4 py-2">
+                  <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Administración</p>
+                </div>
+                <ul className="space-y-2 mt-2">
+                  {adminNavigation.map((item) => {
+                    const isActive = pathname === item.href;
+                    return (
+                      <li key={item.name}>
+                        <Link
+                          href={item.href}
+                          onClick={onClose}
+                          className={`
+                            flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 group
+                            ${isActive 
+                              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/25' 
+                              : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                            }
+                          `}
+                        >
+                          <span className="text-xl group-hover:scale-110 transition-transform duration-200">{item.icon}</span>
+                          <span className="font-medium">{item.name}</span>
+                          {isActive && (
+                            <div className="ml-auto w-2 h-2 bg-white rounded-full"></div>
+                          )}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            )}
           </nav>
 
           {/* Footer del sidebar */}
