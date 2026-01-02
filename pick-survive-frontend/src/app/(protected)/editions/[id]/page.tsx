@@ -57,6 +57,7 @@ interface Edition {
   entryFeeCents: number;
   potCents: number;
   leagueId: string;
+  configJson?: any;
   league?: {
     id: string;
     name: string;
