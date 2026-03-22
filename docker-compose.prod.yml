@@ -1,0 +1,26 @@
+# Solo Postgres en loopback. Necesitás la misma clave que en .env.stack:
+#   set -a && source .env.stack && set +a && docker compose -f docker-compose.prod.yml up -d
+# O: bash deploy/scripts/postgres-only-up.sh
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pickandsurvive_postgres
+    restart: unless-stopped
+    env_file:
+      - deploy/env/postgres.env
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Falta POSTGRES_PASSWORD: source .env.stack o configure-vps.sh}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data_prod:
+    driver: local

@@ -13,7 +13,12 @@
     "lint": "pnpm -r run lint",
     "db:generate": "pnpm --filter @pickandsurvive/api run db:generate",
     "db:migrate": "pnpm --filter @pickandsurvive/api run db:migrate",
-    "db:studio": "pnpm --filter @pickandsurvive/api run db:studio"
+    "db:studio": "pnpm --filter @pickandsurvive/api run db:studio",
+    "configure:vps": "bash deploy/scripts/configure-vps.sh",
+    "docker:stack": "bash deploy/scripts/stack-up.sh",
+    "docker:stack:build": "bash deploy/scripts/stack-up.sh",
+    "docker:stack:down": "bash deploy/scripts/stack-down.sh",
+    "docker:postgres": "bash deploy/scripts/postgres-only-up.sh"
   },
   "devDependencies": {
     "turbo": "^2.0.0",

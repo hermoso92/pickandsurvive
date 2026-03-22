@@ -1,0 +1,57 @@
+# Stack: Postgres + API + Web.
+# 1) bash deploy/scripts/configure-vps.sh   (o dejá que stack-up lo cree con --yes la primera vez)
+# 2) bash deploy/scripts/stack-up.sh      (exportá antes: source .env.stack)
+#
+# compose interpola ${…} desde el entorno del shell; stack-up.sh hace source .env.stack antes de docker compose.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pickandsurvive_postgres
+    restart: unless-stopped
+    env_file:
+      - deploy/env/postgres.env
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Falta POSTGRES_PASSWORD: ejecutá deploy/scripts/configure-vps.sh}
+    volumes:
+      - postgres_data_stack:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  api:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.api
+    container_name: pickandsurvive_api
+    restart: unless-stopped
+    env_file:
+      - deploy/env/api.stack.env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?Falta DATABASE_URL en .env.stack}
+      JWT_SECRET: ${JWT_SECRET:?Falta JWT_SECRET en .env.stack}
+      APP_URL: ${APP_URL:?Falta APP_URL en .env.stack}
+    ports:
+      - "127.0.0.1:3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.web
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+    container_name: pickandsurvive_web
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data_stack:
+    driver: local

@@ -1,0 +1,4 @@
+# Crontab (usuario con permiso docker): backup diario 03:15
+# crontab -e y pegar una línea (ajustá ruta al repo):
+#
+# 15 3 * * * BACKUP_DIR=/home/ubuntu/backups/pickandsurvive /home/ubuntu/PickandSurvive/deploy/scripts/backup-postgres.sh >>/home/ubuntu/backups/pickandsurvive/backup.log 2>&1

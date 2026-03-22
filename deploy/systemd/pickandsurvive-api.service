@@ -1,0 +1,21 @@
+[Unit]
+Description=Pick and Survive API (NestJS)
+After=network.target docker.service
+Wants=docker.service
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+Environment=HOME=/home/ubuntu
+Environment=PICKANDSURVIVE_ROOT=/home/ubuntu/PickandSurvive
+Environment=NODE_ENV=production
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+
+ExecStart=/home/ubuntu/PickandSurvive/deploy/scripts/run-api.sh
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
